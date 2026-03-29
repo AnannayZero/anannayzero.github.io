@@ -1,0 +1,88 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ibucatto Comparator v4.5 | UI Shell</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="title">IBUCATTO <span>COMPARATOR v4.5</span></div>
+        <div class="global-controls">
+            <input type="text" id="currencySign" placeholder="Sign ($, €, etc)" class="small-input">
+            <input type="password" id="apiKey" placeholder="Gemini API Key" class="small-input key-field">
+            <div id="engine-status">ENGINE: 3.1-FLASH-LITE</div>
+        </div>
+    </div>
+
+    <div class="use-case-box">
+        <span class="label">Contextual Target (Specific Workload)</span>
+        <input type="text" id="uCase" class="use-case-input" 
+               placeholder="e.g. 4K Video Editing in AE, 3D Rendering in Blender, Heavy Gaming...">
+    </div>
+
+    <div class="arena">
+        
+        <div class="slot" id="slot1">
+            <div class="loading-mask">INITIALIZING ENGINE...<br>UPLINKING DATA CORE</div>
+            
+            <div class="input-group">
+                <input type="text" id="q1" class="model-input" placeholder="Laptop Model 1 Name">
+                <button class="scan-btn" id="b1" onclick="runScan(1)">Scan</button>
+            </div>
+
+            <div class="score-val" id="score1">00</div>
+
+            <div class="spec-rows">
+                <div class="spec-row"><span class="s-lab">CPU</span><span class="s-val" id="cpu1">--</span></div>
+                <div class="spec-row"><span class="s-lab">GPU</span><span class="s-val" id="gpu1">--</span></div>
+                <div class="spec-row"><span class="s-lab">RAM</span><span class="s-val" id="ram1">--</span></div>
+                <div class="spec-row"><span class="s-lab">Display</span><span class="s-val" id="disp1">--</span></div>
+                <div class="spec-row"><span class="s-lab">Battery</span><span class="s-val" id="bat1">--</span></div>
+                <div class="spec-row"><span class="s-lab">Weight</span><span class="s-val" id="weight1">--</span></div>
+                <div class="spec-row"><span class="s-lab">Est. Price</span><span class="s-val" id="price1">--</span></div>
+            </div>
+
+            <div class="analysis">
+                <span class="label">Best For (Use Case Strengths)</span>
+                <ul id="sum1">
+                    </ul>
+            </div>
+        </div>
+
+        <div class="vs">VS</div>
+
+        <div class="slot" id="slot2">
+            <div class="loading-mask">INITIALIZING ENGINE...<br>UPLINKING DATA CORE</div>
+            
+            <div class="input-group">
+                <input type="text" id="q2" class="model-input" placeholder="Laptop Model 2 Name">
+                <button class="scan-btn" id="b2" onclick="runScan(2)">Scan</button>
+            </div>
+
+            <div class="score-val" id="score2">00</div>
+
+            <div class="spec-rows">
+                <div class="spec-row"><span class="s-lab">CPU</span><span class="s-val" id="cpu2">--</span></div>
+                <div class="spec-row"><span class="s-lab">GPU</span><span class="s-val" id="gpu2">--</span></div>
+                <div class="spec-row"><span class="s-lab">RAM</span><span class="s-val" id="ram2">--</span></div>
+                <div class="spec-row"><span class="s-lab">Display</span><span class="s-val" id="disp2">--</span></div>
+                <div class="spec-row"><span class="s-lab">Battery</span><span class="s-val" id="bat2">--</span></div>
+                <div class="spec-row"><span class="s-lab">Weight</span><span class="s-val" id="weight2">--</span></div>
+                <div class="spec-row"><span class="s-lab">Est. Price</span><span class="s-val" id="price2">--</span></div>
+            </div>
+
+            <div class="analysis">
+                <span class="label">Best For (Use Case Strengths)</span>
+                <ul id="sum2">
+                    </ul>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>
