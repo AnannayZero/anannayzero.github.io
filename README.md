@@ -1,18 +1,212 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ibucatto Comparator v3.5 - Mercenary Edition</title>
+    <title>Ibucatto Comparator v3.6</title>
     <style>
-        :root { --bg: #070709; --neon: #39ff14; --glass: rgba(255,255,255,0.03); --card: #111115; --error: #ff4444; --vs: #ff0055; }
-        body { font-family: 'Segoe UI', 'Roboto', 'Courier New', sans-serif; background: var(--bg); color: #f1f1f1; padding: 30px; margin: 0; min-height: 100vh; }
-        .container { max-width: 1300px; margin: auto; }
+        :root { --bg: #050505; --neon: #39ff14; --glass: rgba(57, 255, 20, 0.03); --card: #0d0d11; --border: #1f1f26; --vs: #ff0055; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: #e0e0e0; margin: 0; padding: 20px; line-height: 1.5; }
+        .container { max-width: 1200px; margin: 0 auto; }
         
-        /* Header & Config */
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #222; padding-bottom: 25px; margin-bottom: 30px; }
-        .title { font-size: 1.8rem; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 2px; }
-        .title span { color: var(--neon); text-shadow: 0 0 10px rgba(57, 255, 20, 0.5); }
+        /* Header */
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid #222; margin-bottom: 30px; }
+        .title { font-size: 1.5rem; font-weight: 900; letter-spacing: 3px; color: #fff; text-transform: uppercase; }
+        .title span { color: var(--neon); text-shadow: 0 0 10px rgba(57, 255, 20, 0.3); }
+        .api-area { font-size: 10px; color: #444; }
+
+        /* Use Case */
+        .use-case-box { background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--neon); padding: 15px; border-radius: 8px; margin-bottom: 30px; }
+        .label { font-size: 0.7rem; text-transform: uppercase; color: #666; letter-spacing: 1px; display: block; margin-bottom: 8px; }
+        .use-case-input { background: #000; border: 1px solid #222; color: #fff; width: 100%; padding: 12px; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
+
+        /* Grid System */
+        .battle-arena { display: grid; grid-template-columns: 1fr 60px 1fr; gap: 20px; align-items: start; }
+        .vs-sign { display: flex; align-items: center; justify-content: center; height: 400px; font-weight: 900; font-size: 1.5rem; color: var(--vs); opacity: 0.5; }
+
+        /* Slot Card */
+        .slot { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 25px; position: relative; transition: 0.4s; }
+        .slot.winner { border-color: var(--neon); box-shadow: 0 0 30px rgba(57, 255, 20, 0.1); }
+        .slot.winner::before { content: "RANK: ALPHA UNIT"; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--neon); color: #000; padding: 2px 12px; font-size: 0.7rem; font-weight: 900; border-radius: 4px; }
+
+        .input-group { display: flex; gap: 8px; margin-bottom: 20px; }
+        .model-input { flex-grow: 1; background: #000; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 6px; outline: none; }
+        .model-input:focus { border-color: var(--neon); }
+        
+        .scan-btn { background: var(--neon); color: #000; border: none; padding: 0 20px; border-radius: 6px; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; }
+        .scan-btn:disabled { background: #222; color: #444; cursor: not-allowed; }
+
+        .score { font-size: 4rem; font-weight: 900; text-align: center; margin: 10px 0; font-family: monospace; color: #1a1a1f; }
+        .has-data .score { color: var(--neon); }
+
+        /* Specs */
+        .spec-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1a1a1f; font-size: 0.85rem; }
+        .spec-n { color: #555; text-transform: uppercase; font-size: 0.7rem; }
+        .spec-v { color: #ccc; font-family: monospace; text-align: right; max-width: 60%; }
+
+        .analysis { margin-top: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; font-size: 0.8rem; color: #888; }
+        .analysis ul { padding-left: 15px; margin: 0; }
+        .analysis li { margin-bottom: 5px; }
+
+        /* Loading Animation */
+        .loader { display: none; text-align: center; color: var(--neon); font-size: 0.7rem; letter-spacing: 2px; margin-bottom: 10px; }
+        .loading .loader { display: block; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        @media (max-width: 850px) {
+            .battle-arena { grid-template-columns: 1fr; }
+            .vs-sign { height: 50px; transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="title">IBUCATTO <span>COMPARATOR</span></div>
+        <div class="api-area">ENCRYPTED LINK ACTIVE</div>
+    </div>
+
+    <div class="use-case-box">
+        <span class="label">Deployment Parameters (Use Case)</span>
+        <input type="text" id="mainUseCase" class="use-case-input" placeholder="e.g. 4K Video Editing, Heavy Gaming, Engineering Software...">
+    </div>
+
+    <div class="battle-arena">
+        <!-- Laptop 1 -->
+        <div class="slot" id="slot1">
+            <div class="loader">UPLINKING...</div>
+            <div class="input-group">
+                <input type="text" id="query1" class="model-input" placeholder="Model name...">
+                <button class="scan-btn" id="btn1" onclick="runScan(1)">Scan</button>
+            </div>
+            <div class="score" id="score1">00</div>
+            <div class="specs">
+                <div class="spec-row"><span class="spec-n">CPU</span><span class="spec-v" id="cpu1">--</span></div>
+                <div class="spec-row"><span class="spec-n">GPU</span><span class="spec-v" id="gpu1">--</span></div>
+                <div class="spec-row"><span class="spec-n">RAM</span><span class="spec-v" id="ram1">--</span></div>
+                <div class="spec-row"><span class="spec-n">Display</span><span class="spec-v" id="screen1">--</span></div>
+                <div class="spec-row"><span class="spec-n">Battery/Power</span><span class="spec-v" id="bat1">--</span></div>
+                <div class="spec-row"><span class="spec-n">Est. Price</span><span class="spec-v" id="price1">--</span></div>
+            </div>
+            <div class="analysis"><ul id="sum1"></ul></div>
+        </div>
+
+        <div class="vs-sign">VS</div>
+
+        <!-- Laptop 2 -->
+        <div class="slot" id="slot2">
+            <div class="loader">UPLINKING...</div>
+            <div class="input-group">
+                <input type="text" id="query2" class="model-input" placeholder="Model name...">
+                <button class="scan-btn" id="btn2" onclick="runScan(2)">Scan</button>
+            </div>
+            <div class="score" id="score2">00</div>
+            <div class="specs">
+                <div class="spec-row"><span class="spec-n">CPU</span><span class="spec-v" id="cpu2">--</span></div>
+                <div class="spec-row"><span class="spec-n">GPU</span><span class="spec-v" id="gpu2">--</span></div>
+                <div class="spec-row"><span class="spec-n">RAM</span><span class="spec-v" id="ram2">--</span></div>
+                <div class="spec-row"><span class="spec-n">Display</span><span class="spec-v" id="screen2">--</span></div>
+                <div class="spec-row"><span class="spec-n">Battery/Power</span><span class="spec-v" id="bat2">--</span></div>
+                <div class="spec-row"><span class="spec-n">Est. Price</span><span class="spec-v" id="price2">--</span></div>
+            </div>
+            <div class="analysis"><ul id="sum2"></ul></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // HARDCODED CONFIG
+    const API_KEY = "AIzaSyC3Mwun5oDx1l3wi1tU4RT9tkqzZh346NY";
+    const scores = { 1: 0, 2: 0 };
+
+    async function runScan(slotId) {
+        const query = document.getElementById(`query${slotId}`).value;
+        const useCase = document.getElementById('mainUseCase').value || "General Use";
+        
+        if (!query) return alert("Enter a model name");
+
+        const slotEl = document.getElementById(`slot${slotId}`);
+        const btn = document.getElementById(`btn${slotId}`);
+        
+        slotEl.classList.add('loading');
+        slotEl.classList.remove('winner', 'has-data');
+        btn.disabled = true;
+
+        const prompt = `Research the laptop "${query}" for this use case: "${useCase}". 
+        Return ONLY a JSON object exactly like this:
+        {
+          "cpu": "model",
+          "gpu": "model + tgp",
+          "ram": "size + type",
+          "display": "specs",
+          "battery": "Wh and estimated hours",
+          "price": "approx price",
+          "score": 1-100,
+          "points": ["point 1", "point 2"]
+        }`;
+
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    tools: [{ google_search_retrieval: {} }]
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.error) {
+                throw new Error(result.error.message);
+            }
+
+            const rawText = result.candidates[0].content.parts[0].text;
+            
+            // IMPROVED JSON EXTRACTION: Finds the first { and last }
+            const start = rawText.indexOf('{');
+            const end = rawText.lastIndexOf('}') + 1;
+            const jsonStr = rawText.substring(start, end);
+            const data = JSON.parse(jsonStr);
+
+            // Update UI
+            scores[slotId] = data.score;
+            document.getElementById(`score${slotId}`).innerText = data.score;
+            document.getElementById(`cpu${slotId}`).innerText = data.cpu;
+            document.getElementById(`gpu${slotId}`).innerText = data.gpu;
+            document.getElementById(`ram${slotId}`).innerText = data.ram;
+            document.getElementById(`screen${slotId}`).innerText = data.display;
+            document.getElementById(`bat${slotId}`).innerText = data.battery;
+            document.getElementById(`price${slotId}`).innerText = data.price;
+            
+            document.getElementById(`sum${slotId}`).innerHTML = 
+                data.points.map(p => `<li>${p}</li>`).join('');
+
+            slotEl.classList.add('has-data');
+            calculateWinner();
+
+        } catch (e) {
+            console.error(e);
+            alert("SCAN ERROR: " + e.message);
+        } finally {
+            slotEl.classList.remove('loading');
+            btn.disabled = false;
+        }
+    }
+
+    function calculateWinner() {
+        if (scores[1] > 0 && scores[2] > 0) {
+            document.getElementById('slot1').classList.remove('winner');
+            document.getElementById('slot2').classList.remove('winner');
+            
+            if (scores[1] > scores[2]) document.getElementById('slot1').classList.add('winner');
+            else if (scores[2] > scores[1]) document.getElementById('slot2').classList.add('winner');
+        }
+    }
+</script>
+
+</body>
+</html>        .title span { color: var(--neon); text-shadow: 0 0 10px rgba(57, 255, 20, 0.5); }
         .api-key-area { display: flex; gap: 10px; align-items: center; opacity: 0.6; transition: 0.3s; }
         .api-key-area:hover { opacity: 1; }
         .api-key-input { background: #111; border: 1px solid #333; color: var(--neon); padding: 10px; border-radius: 6px; width: 280px; font-family: monospace; font-size: 0.8rem; }
