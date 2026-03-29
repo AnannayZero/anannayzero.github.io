@@ -100,33 +100,58 @@
 <script type="module">
     // Primary Fetch Function with Integrated Gemini Grounding
     window.runAutomatedFetch = async (slotId) => {
-        const key = document.getElementById('apiKey').value;
-        const query = document.getElementById(`query${slotId}`).value;
-        const useCase = document.getElementById('mainUseCase').value || "General Productivity";
-        const currency = document.getElementById('currencySign').value || "$"; // Defaults to $ if blank
+    const key = document.getElementById('apiKey').value;
+    const query = document.getElementById(`query${slotId}`).value;
+    const useCase = document.getElementById('mainUseCase').value || "General productivity";
+    const currency = document.getElementById('currencySign').value || "$";
 
-        if (!key) return alert("You must enter a Gemini API Key first.");
-        if (!query) return alert("Please enter a laptop model name.");
+    if (!key) return alert("Enter API Key.");
+    
+    document.getElementById(`status${slotId}`).innerText = "SCANNING...";
 
-        // UI Updates
-        document.getElementById(`status${slotId}`).innerText = "SCANNING...";
-        document.getElementById(`status${slotId}`).style.color = "#ff8800";
-        document.getElementById(`score${slotId}`).innerText = "---";
+    const prompt = `Search for technical specs for ${query} considering use case: ${useCase}. 
+    Return a JSON object: { "cpu": "...", "gpu": "...", "ram": "...", "screen": "...", "price": 0, "score": 0, "summary": ["strengths"] }. 
+    NO MARKDOWN. NO PREAMBLE.`;
 
-        // Structured prompt to Gemini with Search Grounding enabled
-        const prompt = `Search for the detailed, current technical specs of the ${query} laptop. 
-        Apply specific attention to how well these specs match the primary use case of: "${useCase}". 
+    try {
+        // We use gemini-1.5-flash or gemini-2.0-flash for best grounding stability
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                tools: [{ google_search: {} }] // The correct 2026 tool name
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.error) {
+            throw new Error(`${result.error.status}: ${result.error.message}`);
+        }
+
+        const textResponse = result.candidates[0].content.parts[0].text;
+        const cleanJson = textResponse.replace(/```json|```/g, "").trim();
+        const data = JSON.parse(cleanJson);
         
-        Return ONLY a JSON object with this exact structure: 
-        { 
-          "cpu_model": "Exact Model", 
-          "gpu_model_and_tgp": "Exact Model + Max Wattage", 
-          "ram_gb_and_speed": "GB + Speed (e.g., LPDDR5X-7500)", 
-          "display_tech": "Nits, Resolution, Refresh Rate", 
-          "price_converted": "Approximate Price (numeric only)", 
-          "weighted_score": "Score (1-100) prioritized for user use case",
-          "summary_strengths": ["Bulleted list of 3-4 key strengths tailored for the user's use case"]
-        }`;
+        // Populate UI
+        document.getElementById(`score${slotId}`).innerText = data.score;
+        document.getElementById(`cpu${slotId}`).innerText = data.cpu;
+        document.getElementById(`gpu${slotId}`).innerText = data.gpu;
+        document.getElementById(`ram${slotId}`).innerText = data.ram;
+        document.getElementById(`screen${slotId}`).innerText = data.screen;
+        document.getElementById(`price${slotId}`).innerText = `${currency} ${data.price}`;
+        
+        const summaryList = document.getElementById(`summary${slotId}`);
+        summaryList.innerHTML = data.summary.map(s => `<li>${s}</li>`).join("");
+        
+        document.getElementById(`status${slotId}`).innerText = "SUCCESS";
+    } catch (e) {
+        document.getElementById(`status${slotId}`).innerText = "ERROR";
+        console.error("DEBUG LOG:", e.message);
+        alert("API Error: " + e.message);
+    }
+};
 
         try {
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent?key=${key}`, {
