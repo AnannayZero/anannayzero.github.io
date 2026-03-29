@@ -3,16 +3,228 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Omni-Laptop Comparator v3.5 - Mercenary Special</title>
+    <title>Ibucatto Comparator v3.5 - Mercenary Edition</title>
     <style>
-        :root { --bg: #070709; --neon: #39ff14; --glass: rgba(255,255,255,0.03); --card: #111115; --error: #ff4444; }
-        body { font-family: 'Segoe UI', 'Roboto', sans-serif; background: var(--bg); color: #f1f1f1; padding: 30px; margin: 0; }
-        .container { max-width: 1400px; margin: auto; }
+        :root { --bg: #070709; --neon: #39ff14; --glass: rgba(255,255,255,0.03); --card: #111115; --error: #ff4444; --vs: #ff0055; }
+        body { font-family: 'Segoe UI', 'Roboto', 'Courier New', sans-serif; background: var(--bg); color: #f1f1f1; padding: 30px; margin: 0; min-height: 100vh; }
+        .container { max-width: 1300px; margin: auto; }
         
+        /* Header & Config */
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #222; padding-bottom: 25px; margin-bottom: 30px; }
         .title { font-size: 1.8rem; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 2px; }
-        .title span { color: var(--neon); }
-        .api-key-area { display: flex; gap: 10px; align-items: center; }
+        .title span { color: var(--neon); text-shadow: 0 0 10px rgba(57, 255, 20, 0.5); }
+        .api-key-area { display: flex; gap: 10px; align-items: center; opacity: 0.6; transition: 0.3s; }
+        .api-key-area:hover { opacity: 1; }
+        .api-key-input { background: #111; border: 1px solid #333; color: var(--neon); padding: 10px; border-radius: 6px; width: 280px; font-family: monospace; font-size: 0.8rem; }
+        
+        /* Use Case Bar */
+        .use-case-bar { background: var(--card); border: 1px solid #222; border-radius: 12px; padding: 20px; margin-bottom: 40px; position: relative; overflow: hidden; }
+        .use-case-bar::before { content: ""; position: absolute; left: 0; top: 0; height: 100%; width: 4px; background: var(--neon); }
+        .use-case-label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; display: block; }
+        .use-case-input { background: #000; border: 1px solid #333; color: #fff; padding: 15px; border-radius: 8px; font-size: 1.1rem; width: 100%; box-sizing: border-box; resize: none; transition: 0.3s; }
+        .use-case-input:focus { border-color: var(--neon); outline: none; box-shadow: 0 0 15px rgba(57, 255, 20, 0.1); }
+        
+        /* The Battle Grid */
+        .battle-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; align-items: start; }
+        .vs-divider { display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 2rem; color: var(--vs); height: 500px; text-shadow: 0 0 10px var(--vs); }
+        
+        .slot { background: var(--card); border: 1px solid #2a2a30; border-radius: 20px; padding: 30px; position: relative; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .slot.winner { border-color: var(--neon); box-shadow: 0 0 50px rgba(57, 255, 20, 0.2); transform: translateY(-10px); }
+        .slot.winner::after { content: "SUPERIOR UNIT"; position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: var(--neon); color: #000; padding: 5px 20px; font-weight: 900; border-radius: 20px; font-size: 0.7rem; letter-spacing: 1px; }
+        
+        .model-input-area { display: flex; gap: 10px; margin-bottom: 20px; }
+        .model-input { flex-grow: 1; padding: 15px; background: #000; border: 1px solid #444; color: #fff; border-radius: 10px; font-size: 1.1rem; }
+        
+        .fetch-btn { background: var(--neon); color: #000; border: none; padding: 0 25px; font-weight: 800; cursor: pointer; border-radius: 10px; text-transform: uppercase; transition: 0.2s; }
+        .fetch-btn:hover { background: #fff; filter: drop-shadow(0 0 10px #fff); }
+        .fetch-btn:disabled { background: #333; color: #666; cursor: wait; }
+        
+        .score-display { font-size: 5rem; font-weight: 950; color: #222; text-align: center; margin: 10px 0; font-family: 'Arial Black', sans-serif; line-height: 1; transition: 0.5s; }
+        .has-data .score-display { color: var(--neon); text-shadow: 0 0 20px rgba(57, 255, 20, 0.3); }
+
+        /* Spec Table */
+        .spec-list { margin-top: 25px; border-top: 1px solid #222; }
+        .spec-item { display: flex; flex-direction: column; padding: 12px 0; border-bottom: 1px solid #222; }
+        .spec-label { color: #555; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 1px; margin-bottom: 4px; }
+        .spec-value { font-family: 'Courier New', monospace; font-size: 0.95rem; color: #ddd; }
+        
+        /* Analysis Area */
+        .summary-area { margin-top: 25px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; min-height: 120px; }
+        .summary-list { list-style: none; padding: 0; margin: 0; font-size: 0.85rem; color: #aaa; line-height: 1.6; }
+        .summary-list li { margin-bottom: 8px; padding-left: 18px; position: relative; }
+        .summary-list li::before { content: ">"; color: var(--neon); position: absolute; left: 0; }
+        
+        .loading-overlay { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.8); border-radius: 20px; z-index: 10; align-items: center; justify-content: center; flex-direction: column; }
+        .loading .loading-overlay { display: flex; }
+        .loader-bar { width: 100px; height: 2px; background: #222; margin-top: 10px; position: relative; overflow: hidden; }
+        .loader-bar::after { content: ""; position: absolute; width: 40px; height: 100%; background: var(--neon); animation: slide 1s infinite linear; }
+        @keyframes slide { from { left: -40px; } to { left: 100px; } }
+
+        @media (max-width: 900px) {
+            .battle-grid { grid-template-columns: 1fr; }
+            .vs-divider { height: auto; padding: 20px; transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="title">IBUCATTO <span>COMPARATOR</span> v3.5</div>
+        <div class="api-key-area">
+            <input type="text" id="currencySign" placeholder="$" value="$" style="width: 40px; background: #111; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 6px; text-align: center;">
+            <input type="password" id="apiKey" class="api-key-input" value="AIzaSyC3Mwun5oDx1l3wi1tU4RT9tkqzZh346NY">
+        </div>
+    </div>
+
+    <div class="use-case-bar">
+        <span class="use-case-label">Tactical Use Case (Performance Context)</span>
+        <textarea id="mainUseCase" class="use-case-input" placeholder="e.g. Professional 3D Rendering, Competitive 240Hz Gaming, or Long Battery Life for Travel..." rows="1"></textarea>
+    </div>
+
+    <div class="battle-grid">
+        <!-- Slot 1 -->
+        <div class="slot" id="slot1">
+            <div class="loading-overlay">
+                <div style="letter-spacing: 2px; font-size: 0.8rem;">ACCESSING GLOBAL DATABASE...</div>
+                <div class="loader-bar"></div>
+            </div>
+            <div class="model-input-area">
+                <input type="text" id="query1" class="model-input" placeholder="Laptop Model 1">
+                <button class="fetch-btn" id="btn1" onclick="runAutomatedFetch(1)">SCAN</button>
+            </div>
+            <div class="score-display" id="score1">00</div>
+            <div class="spec-list">
+                <div class="spec-item"><span class="spec-label">CPU</span> <span id="cpu1" class="spec-value">--</span></div>
+                <div class="spec-item"><span class="spec-label">GPU</span> <span id="gpu1" class="spec-value">--</span></div>
+                <div class="spec-item"><span class="spec-label">RAM</span> <span id="ram1" class="spec-value">--</span></div>
+                <div class="spec-item"><span class="spec-label">DISPLAY</span> <span id="screen1" class="spec-value">--</span></div>
+                <div class="spec-item"><span class="spec-label">VALUATION</span> <span id="price1" class="spec-value">--</span></div>
+            </div>
+            <div class="summary-area">
+                <ul class="summary-list" id="summary1"></ul>
+            </div>
+        </div>
+
+        <div class="vs-divider">VS</div>
+
+        <!-- Slot 2 -->
+        <div class="slot" id="slot2">
+            <div class="loading-overlay">
+                <div style="letter-spacing: 2px; font-size: 0.8rem;">ACCESSING GLOBAL DATABASE...</div>
+                <div class="loader-bar"></div>
+            </div>
+            <div class="model-input-area">
+                <input type="text" id="query2" class="model-input" placeholder="Laptop Model 2">
+                <button class="fetch-btn" id="btn2" onclick="runAutomatedFetch(2)">SCAN</button>
+            </div>
+            <div class="score-display" id="score2">00</div>
+            <div class="spec-list">
+                <div class="spec-item"><span class="spec-label">CPU</span> <span id="cpu2" class="spec-value">--</span></div>
+                <div class="spec-item"><span class="spec-label">GPU</span> <span id="gpu2" class="spec-value">--</span></div>
+                <div class="spec-item"><span class="spec-label">RAM</span> <span id="ram2" class="spec-value">--</span></div>
+                <div class="spec-item"><span class="spec-label">DISPLAY</span> <span id="screen2" class="spec-value">--</span></div>
+                <div class="spec-item"><span class="spec-label">VALUATION</span> <span id="price2" class="spec-value">--</span></div>
+            </div>
+            <div class="summary-area">
+                <ul class="summary-list" id="summary2"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const globalScores = { 1: 0, 2: 0 };
+
+    async function runAutomatedFetch(slotId) {
+        const key = document.getElementById('apiKey').value;
+        const query = document.getElementById(`query${slotId}`).value;
+        const useCase = document.getElementById('mainUseCase').value || "General High Performance";
+        const currency = document.getElementById('currencySign').value || "$";
+
+        if (!key) return alert("CRITICAL ERROR: No API Key detected.");
+        if (!query) return alert("TARGET MISSING: Enter model name.");
+
+        const slotEl = document.getElementById(`slot${slotId}`);
+        const btn = document.getElementById(`btn${slotId}`);
+        
+        slotEl.classList.add('loading');
+        slotEl.classList.remove('winner', 'has-data');
+        btn.disabled = true;
+
+        const prompt = `Research the laptop "${query}" for the use case: "${useCase}".
+        Compare its actual technical specs against current market standards. 
+        Return ONLY a JSON object. No conversational text.
+        Structure:
+        {
+          "cpu": "Full model name",
+          "gpu": "Full model name + Wattage/TGP",
+          "ram": "Size, Speed, and Type",
+          "display": "Resolution, Refresh Rate, Panel Type",
+          "price": "Current estimated price (numeric only)",
+          "score": (Int 1-100 based on use case suitability),
+          "points": ["Major pro/con for use case 1", "Point 2", "Point 3"]
+        }`;
+
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    tools: [{ google_search_retrieval: {} }]
+                })
+            });
+
+            const result = await response.json();
+            const rawText = result.candidates[0].content.parts[0].text;
+            
+            // Extract clean JSON from AI response
+            const cleanJsonText = rawText.replace(/```json|```/g, "").trim();
+            const data = JSON.parse(cleanJsonText);
+
+            // Populate UI
+            globalScores[slotId] = data.score;
+            document.getElementById(`score${slotId}`).innerText = data.score;
+            document.getElementById(`cpu${slotId}`).innerText = data.cpu;
+            document.getElementById(`gpu${slotId}`).innerText = data.gpu;
+            document.getElementById(`ram${slotId}`).innerText = data.ram;
+            document.getElementById(`screen${slotId}`).innerText = data.display;
+            document.getElementById(`price${slotId}`).innerText = `${currency}${data.price}`;
+
+            const summaryList = document.getElementById(`summary${slotId}`);
+            summaryList.innerHTML = data.points.map(p => `<li>${p}</li>`).join('');
+
+            slotEl.classList.add('has-data');
+            compareAndHighlight();
+
+        } catch (e) {
+            console.error("Critical Error:", e);
+            alert("DATA UPLINK FAILED: Ensure API key is active.");
+        } finally {
+            slotEl.classList.remove('loading');
+            btn.disabled = false;
+        }
+    }
+
+    function compareAndHighlight() {
+        const slot1 = document.getElementById('slot1');
+        const slot2 = document.getElementById('slot2');
+        
+        if (globalScores[1] > 0 && globalScores[2] > 0) {
+            slot1.classList.remove('winner');
+            slot2.classList.remove('winner');
+
+            if (globalScores[1] > globalScores[2]) {
+                slot1.classList.add('winner');
+            } else if (globalScores[2] > globalScores[1]) {
+                slot2.classList.add('winner');
+            }
+        }
+    }
+</script>
+</body>
+</html>        .api-key-area { display: flex; gap: 10px; align-items: center; }
         .api-key-input { background: #111; border: 1px solid var(--neon); color: var(--neon); padding: 10px; border-radius: 6px; width: 320px; }
         
         .use-case-bar { background: var(--card); border: 1px solid #333; border-radius: 12px; padding: 20px; margin-bottom: 40px; display: flex; flex-direction: column; gap: 10px; }
